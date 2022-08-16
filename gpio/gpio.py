@@ -35,7 +35,7 @@ class RPI4_GPIO():
 
         self.gpioConfig(self.__mode, self.__value)
 
-    def gpioConfig(self, mode, value='0'):
+    def gpioConfig(self, mode='out', value='0'):
         '''
         This function configures the GPIO as an input, output, or alt0.
         :param mode: String input of the desired mode.
