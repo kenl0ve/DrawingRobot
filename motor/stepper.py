@@ -24,12 +24,10 @@ basic_motor = StepperMotor(
 
 '''
 from this import d
-from myMotorDriver              import *
-from myStepperConfig            import *
-from myMotor                    import *
+from stepperConfig              import *
 
 
-class MyStepper():
+class Stepper():
     def __init__(self, kwargs=None):
         self._name                      = kwargs['name']
        
@@ -48,6 +46,22 @@ class MyStepper():
         #
         self._step_delay                = STEPPER_STEP_DELAY_100_MS
 
+    def reverseDirection(self):
+        if self._motor_direction != STEPPER_CLOCKWISE_DIRECTION:
+            self.motor_direction = STEPPER_CLOCKWISE_DIRECTION
+        else:
+            self.motor_direction = STEPPER_COUNTER_CLOCKWISE_DIRECTION
+    
+    def move_steps(self, steps: int):
+        '''
+        Move the motors with the step stype is full step
+        '''
+        raise NotImplementedError("This needs to be set by the concrete subclass.")
+    def move(self, direction, steps):
+        if direction != self._motor_direction:
+            self.reverseDirection()
+        raise NotImplementedError("This needs to be set by the concrete subclass.")
+
     @property
     def gpios_info(self):
         """Return the fields of this motor that contains GPIOs info. """
@@ -61,18 +75,19 @@ class MyStepper():
 
     @property
     def motor_direction(self):
-        if self._direction_gpio == STEPPER_CLOCKWISE_DIRECTION:
+        if self._motor_direction == STEPPER_CLOCKWISE_DIRECTION:
             return 'clockwise'
         return 'counter-clockwise'
-    
     @motor_direction.setter
     def motor_direction(self, direction):
         """Setter for direction of Motor."""
         if direction == STEPPER_CLOCKWISE_DIRECTION:
-            self._direction_gpio = STEPPER_CLOCKWISE_DIRECTION
+            self._motor_direction = STEPPER_CLOCKWISE_DIRECTION
+            self._direction_gpio.gpioConfig(mode='out', value='1')
             return
-        if direction == STEPPER_COUNTER_CLOCKWISE_DIRECTION:
-            self._direction_gpio = STEPPER_COUNTER_CLOCKWISE_DIRECTION
+        elif direction == STEPPER_COUNTER_CLOCKWISE_DIRECTION:
+            self._motor_direction = STEPPER_COUNTER_CLOCKWISE_DIRECTION
+            self._direction_gpio.gpioConfig(mode='out', value='0')
             return
         raise ValueError("Direction of Motors is not set correctly in format.")
 
@@ -82,7 +97,6 @@ class MyStepper():
         Delay between steps in miliseconds.
         """
         return self._step_delay
-    
     @step_delay.setter
     def step_delay(self, delay):
         """Step delay setter."""
@@ -94,11 +108,30 @@ class MyStepper():
         Return the current step type of Motor.
         """
         return self._step_type
-    
     @step_type.setter
     def step_type(self, type):
         """Step delay setter."""
         self._step_type = type
+        self.ms1_gpio, self.ms2_gpio, self.ms3_gpio = STEPPER_DRIVER_A4988_MS_PIN_LIST[self._step_type]    
     
+    @property
+    def ms1_gpio(self):
+        return self._ms1_gpio
+    @ms1_gpio.setter
+    def ms1_gpio(self, status):
+        self._ms1_gpio.gpioConfig(mode='out', value=status)
     
+    @property
+    def ms2_gpio(self):
+        return self._ms2_gpio
+    @ms2_gpio.setter
+    def ms2_gpio(self, status):
+        self._ms2_gpio.gpioConfig(mode='out', value=status)
+    
+    @property
+    def ms3_gpio(self):
+        return self._ms3_gpio
+    @ms3_gpio.setter
+    def ms3_gpio(self, status):
+        self._ms3_gpio.gpioConfig(mode='out', value=status)
 
