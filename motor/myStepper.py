@@ -23,14 +23,14 @@ basic_motor = StepperMotor(
 
 
 '''
-from myMotorDriver          import *
-from myMotorConfig          import *
-from myMotor                import *
+from this import d
+from myMotorDriver              import *
+from myStepperConfig            import *
+from myMotor                    import *
 
 
 class MyStepper():
     def __init__(self, kwargs=None):
-
         self._name                      = kwargs['name']
        
         # GPIOs
@@ -41,43 +41,64 @@ class MyStepper():
         self._ms3_gpio                  = kwargs['ms3_gpio']
 
         # Motor status
-        self._direction_of_rotation     = True
-        self._step_type                 = 'full'
-        self._driver_type               = 'A4988'
+        self._motor_direction           = STEPPER_CLOCKWISE_DIRECTION
+        self._step_type                 = STEPPER_FULL_STEP_TYPE
+        self._driver_type               = STEPPER_DRIVER_A4988_TYPES           # Hardcode A4988
+
+        #
+        self._step_delay                = STEPPER_STEP_DELAY_100_MS
 
     @property
-    def gpio_pin_fields(self):
-        """Return the fields of this motor that contains GPIO info. """
+    def gpios_info(self):
+        """Return the fields of this motor that contains GPIOs info. """
         return [
-            "direction_GPIO_pin",
-            "step_GPIO_pin",
-            "MS1_GPIO_pin",
-            "MS2_GPIO_pin",
-            "MS3_GPIO_pin",
+            "Direction_GPIO",
+            "PWM_GPIO",
+            "MS1_GPIO",
+            "MS2_GPIO",
+            "MS3_GPIO",
         ]
 
-    def clean(self):
-        pass
+    @property
+    def motor_direction(self):
+        if self._direction_gpio == STEPPER_CLOCKWISE_DIRECTION:
+            return 'clockwise'
+        return 'counter-clockwise'
+    
+    @motor_direction.setter
+    def motor_direction(self, direction):
+        """Setter for direction of Motor."""
+        if direction == STEPPER_CLOCKWISE_DIRECTION:
+            self._direction_gpio = STEPPER_CLOCKWISE_DIRECTION
+            return
+        if direction == STEPPER_COUNTER_CLOCKWISE_DIRECTION:
+            self._direction_gpio = STEPPER_COUNTER_CLOCKWISE_DIRECTION
+            return
+        raise ValueError("Direction of Motors is not set correctly in format.")
 
-    def move_steps(self, steps: int, log=True):
-        if not self._controller:
-            self._init_controller_class()
-
-        log_info = (
-            f"Moving stepper {self.name} {steps} x {self.steptype} steps "
-            f"in the {self.direction_of_rotation} direction."
-        )
-
-        self._controller.motor_go(
-            self._direction_of_rotation,
-            self._steptype,
-            steps,
-            self._step_delay,
-            self._verbose,
-            self._init_delay,
-        )
-        if log:
-            logging.info(log_info)
-
-        return log_info
+    @property
+    def step_delay(self):
+        """
+        Delay between steps in miliseconds.
+        """
+        return self._step_delay
+    
+    @step_delay.setter
+    def step_delay(self, delay):
+        """Step delay setter."""
+        self._step_delay = delay
+    
+    @property
+    def step_type(self):
+        """
+        Return the current step type of Motor.
+        """
+        return self._step_type
+    
+    @step_type.setter
+    def step_type(self, type):
+        """Step delay setter."""
+        self._step_type = type
+    
+    
 
