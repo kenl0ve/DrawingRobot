@@ -1,6 +1,6 @@
 LIMIT_SWITCH_GPIO_CONFIGURATION = [
-    {'name': 'GPIO2_LIMIT_SWITCH_X_1',  'type': 'pi', 'physical': '3',  'wPi': '8', 'BCM': '2',  'mode': 'in',   'value': '0'},
-    {'name': 'GPIO3_LIMIT_SWITCH_X_2',  'type': 'pi', 'physical': '5',  'wPi': '9', 'BCM': '3',  'mode': 'in',   'value': '0'},
+    {'name': 'GPIO2_X_LIMIT_SWITCH_HOME','type': 'pi', 'physical': '3',  'wPi': '8', 'BCM': '2',  'mode': 'in',   'value': '0'},
+    {'name': 'GPIO3_X_LIMIT_SWITCH_END', 'type': 'pi', 'physical': '5',  'wPi': '9', 'BCM': '3',  'mode': 'in',   'value': '0'},
     {'name': 'GPIO4_LIMIT_SWITCH_Y_1',  'type': 'pi', 'physical': '7',  'wPi': '7', 'BCM': '4',  'mode': 'in',   'value': '0'},
     {'name': 'GPIO14_LIMIT_SWITCH_Y_2', 'type': 'pi', 'physical': '8',  'wPi': '15','BCM': '14', 'mode': 'in',   'value': '0'},
     {'name': 'GPIO15_LIMIT_SWITCH_Z_1', 'type': 'pi', 'physical': '10', 'wPi': '16','BCM': '15', 'mode': 'in',   'value': '0'},

@@ -14,8 +14,8 @@ Description     : Initialize an individual step motor object, includes function:
 '''
 import sys
 import time
-from stepper                import Stepper
-from limitSwitch            import LimitSwitch
+from src.stepper            import Stepper
+from src.limitSwitch        import LimitSwitch
 from utilities.myThread     import MyThread
 
 MSECS_5 = 0.005
@@ -57,13 +57,3 @@ class AxisController():
 
     def initMotor(self):
         self._motor_ctrl.init()
-
-def main(options):
-    sys.path.append('/Users/130760/Documents/PrivateThings/Project/Drawing-Robot/source')
-    from configuration.config   import X_AXIS_CONFIGURATION
-
-    x_axis_ctrl         = AxisController(X_AXIS_CONFIGURATION)
-
-if __name__ == "__main__":
-    main(sys.argv[1:])
-

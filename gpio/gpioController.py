@@ -10,7 +10,7 @@ Description     : Initialize a GPIO object
 
 from subprocess             import call
 from configuration.config   import log
-from gpioConfig             import *
+from gpio.gpioConfig        import *
 from utilities.singleton    import Singleton
 import wiringpi
 

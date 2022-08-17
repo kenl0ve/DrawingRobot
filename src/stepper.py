@@ -23,7 +23,7 @@ basic_motor = StepperMotor(
 
 
 '''
-from stepperConfig              import *
+from src.stepperConfig          import *
 from gpio.gpioController        import GpioController
 
 class Stepper():
@@ -32,12 +32,12 @@ class Stepper():
     def __init__(self, kwargs=None):
         self._name                      = kwargs['name']
        
-        # # GPIOs
-        self._direction_gpio            = Stepper._gpio_ctrl._gpioList(kwargs['direction_gpio'])
-        self._pwm_gpio                  = Stepper._gpio_ctrl._gpioList(kwargs['pwm_gpio'])
-        self._ms1_gpio                  = Stepper._gpio_ctrl._gpioList(kwargs['ms1_gpio'])
-        self._ms2_gpio                  = Stepper._gpio_ctrl._gpioList(kwargs['ms2_gpio'])
-        self._ms3_gpio                  = Stepper._gpio_ctrl._gpioList(kwargs['ms3_gpio'])
+        # GPIOs
+        self._direction_gpio            = Stepper._gpio_ctrl._gpioList[kwargs['direction_gpio']]
+        self._pwm_gpio                  = Stepper._gpio_ctrl._gpioList[kwargs['pwm_gpio']]
+        self._ms1_gpio                  = Stepper._gpio_ctrl._gpioList[kwargs['ms1_gpio']]
+        self._ms2_gpio                  = Stepper._gpio_ctrl._gpioList[kwargs['ms2_gpio']]
+        self._ms3_gpio                  = Stepper._gpio_ctrl._gpioList[kwargs['ms3_gpio']]
                     
         # Motor status
         self._motor_direction           = STEPPER_CLOCKWISE_DIRECTION
