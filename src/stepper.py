@@ -23,8 +23,10 @@ basic_motor = StepperMotor(
 
 
 '''
+import time
 from src.stepperConfig          import *
 from gpio.gpioController        import GpioController
+from utilities.myThread         import MyThread
 
 class Stepper():
     _gpio_ctrl = GpioController.Instance()
@@ -47,18 +49,43 @@ class Stepper():
         #
         self._step_delay                = STEPPER_STEP_DELAY_100_MS
 
-    def move_steps(self, steps: int):
+        self._is_running                = STEPPER_IS_STOP
+
+        # Threads
+        # self._pwmThread                 = MyThread(1, "PWM Controller", 2, self.pwm)
+
+    def pwm(self, steps):
+        for x in range(0, steps):
+            if self._is_running == STEPPER_IS_RUNNING:
+                self.pwm_gpio   = STEPPER_GO
+                time.sleep(self._step_delay)
+                self.pwm_gpio   = STEPPER_STOP
+                time.sleep(self._step_delay)
+            
+    def motor_go(self, direction, steps):
         '''
         Move the motors with the step stype is full step
         '''
-        raise NotImplementedError("This needs to be set by the concrete subclass.")
-    def move(self, direction, steps):
         if direction != self._motor_direction:
             self.reverseDirection()
-        raise NotImplementedError("This needs to be set by the concrete subclass.")
-    def stop(self):
-        raise NotImplementedError("This needs to be set by the concrete subclass.")
 
+        real_steps = steps * STEPPER_STEP_PER_REVOLUTION[self._step_type]
+
+        self.pwm(real_steps)
+
+    def move(self, direction, steps=None):
+        self._is_running    = STEPPER_IS_RUNNING
+        if steps == None: # just move, dont care the steps
+            self.pwm_gpio = STEPPER_GO
+        else:
+            self.motor_go(direction, steps)
+
+    def stop(self):
+        self._is_running == STEPPER_IS_STOP
+        if self._is_running == STEPPER_IS_RUNNING:
+            self.pwm_gpio = STEPPER_STOP
+        else:
+            raise NotImplementedError("GIVE LOG FILE")
 
     def init(self):
         self.motor_direction    = self._motor_direction
@@ -144,4 +171,11 @@ class Stepper():
     @ms3_gpio.setter
     def ms3_gpio(self, status):
         self._ms3_gpio.gpioConfig(mode='out', value=status)
+
+    @property
+    def pwm_gpio(self):
+        return self._pwm_gpio
+    @pwm_gpio.setter
+    def pwm_gpio(self, status):
+        self._pwm_gpio.gpioConfig(mode='out', value=status)
 
