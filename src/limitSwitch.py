@@ -18,8 +18,7 @@ class LimitSwitch():
         self._gpio.gpioConfig(mode='in')
 
     def read(self):
-        self._status = self._gpio.gpioRead()
-        return self._status
+        return self._gpio.gpioRead()
     
     @property
     def is_pressed(self):
