@@ -8,8 +8,6 @@ import os
 import time
 import shutil
 
-from ate_settings import *
-
 '''
 Usage:  log = Log(); log.logger.info("")
 

@@ -1,112 +1,111 @@
-#!/usr/bin/env python
 """
-GPIO Controller Class
-Created: 2017 May 30
-Author: James Quen
+Author          : kenl0ve
+Date            : 16th Aug 2022
 
-Description:
-Implementation of the GPIO controller
+File            : myGPIO.py
+Class           : RPI4_GPIO()
+Status          : Developing Version
+Description     : Initialize a GPIO object
 """
 
-import time
-import gpio as gpio
-
+from subprocess             import call
 from configuration.config   import log
 from gpioConfig             import *
+from utilities.singleton    import Singleton
+import wiringpi
 
+@Singleton
 class GpioController():
 
-    def __init__(self, gpioConfiguration):
-        self._gpioConfiguration = gpioConfiguration
+    def __init__(self):
+        # need to import the pin map and pin definitions....
+        self._gpioList = {}
 
-        log.logger.debug("Initializing GPIO pins.")
+        call(["sudo", "chmod", "666", "/dev/mem"])
+        call(["sudo", "chmod", "666", "/dev/gpiomem"])
 
-        for pin in self._gpioConfiguration:
-            gpioList[pin['name']] = gpio.RPI4_GPIO(pin)
+        for pin in LIMIT_SWITCH_GPIO_CONFIGURATION:
+            self._gpioList[pin['name']] = GPIO(pin)
+        for pin in MOTOR_GPIO_CONFIGURATION:
+            self._gpioList[pin['name']] = GPIO(pin)
+        for pin in RPI_GPIO_NO_USED_CONFIGURATION:
+            self._gpioList[pin['name']] = GPIO(pin)
 
-    def gpioInit(self):
-        log.logger.debug("Do nothing")
+        #ateConfig.log.logger.debug("Finished initializing GPIO pins.")
 
-    def set(self, pinName, mode, value):
+class GPIO():
+    def __init__(self, pin):
         '''
-        This function sets the GPIO high or low if it is configured as an output.
-        :param pinName: The name of the pin to set.
-        :param mode: The mode of the pin to set.
-        :param state: String input for the desired state.
+        Initializes GPIO as defined in the pi4Pins dictionary.
+        :param pin: Dicitonary containing pin information
+        :param inferConfiguration: If true, rather than initializing the state and mode of the gpio
+        to the parameters present in pin, it will load the current state.
+        '''
+
+        self.__BCM      = pin['BCM']
+        self.__mode     = pin['mode']
+        self.__name     = pin['name']
+        self.__physical = pin['physical']
+        self.__value    = pin['value']
+        self.__wPi      = pin['wPi']
+        self.__type     = pin['type']
+
+        # sets wiringpi to use BCM pin numbering
+        wiringpi.wiringPiSetupGpio()
+
+        self.gpioConfig(self.__mode, self.__value)
+
+    def gpioConfig(self, mode='out', value='0'):
+        '''
+        This function configures the GPIO as an input, output, or alt0.
+        :param mode: String input of the desired mode.
         :return: none
         '''
+        if mode in ['in', 'out', 'alt0']:
+            call(["gpio", "-g", "mode", self.__BCM, mode])
+            self.__mode     = mode
+            self.__value    = value
 
-        gpioList[pinName].gpioConfig(mode, value)
 
-    def configure(self, pinName, mode, value):
-        '''
-        This function configures the GPIO to a mode with a value
-        :param pinName: The name of the pin to configure.
-        :param mode: The mode of the pin to configure.
-        :param value: The value of the pin to set if it is an output.
-        :return: none
-        '''
+            if mode == 'out':
+                wiringpi.digitalWrite(int(self.__BCM), int(value))
+            elif mode == 'in' and value == '0':
+                call(["gpio", "-g", "mode", self.__BCM, 'down'])
 
-        gpioList[pinName].gpioConfig(mode, value)
+            elif mode == 'in' and value == '1':
+                call(["gpio", "-g", "mode", self.__BCM, 'up'])
+        else:
+            log.logger.error("Invalid mode for GPIO: %s" % self.__name)
+            self.__mode = None
 
-    def read(self, pinName):
+    def gpioRead(self):
         '''
         This function gets the state of the GPIO.
         :return: string value of GPIO state.
         '''
 
-        return str(gpioList[pinName].gpioRead())
+        self.__value = str(wiringpi.digitalRead(int(self.__BCM)))
 
-    def poll(self, pinName, pinState, readDelay=0.1, timeout=10):
-        '''
-        This function polls the pin for desired pin state with a delay between reads.
-        If the pin does not reach the desired state with in the time out, the function returns False.
-        :param pinName: The pin usage name.
-        :param pinState: The desired state of the pin.
-        :param readDelay: The delay between each read.
-        :param timeout: The maximum time to wait for the pin to reach desired state.
-        :return: Returns True if the pin reaches desired state, otherwise returns False.
-        '''
+        return self.__value
 
-        # Error check for valid pin state.
-        if str(pinState) != "1" and str(pinState) != "0":
-            log.logger.error("Invalid pin state to poll. Pin state to poll must be either 1 or 0.")
-            return False
-
-        log.logger.debug("Polling %s until it is %s with a read delay of %s seconds and a timeout of %s seconds." % (pinName, str(pinState), str(readDelay), str(timeout)))
-        # Get the start time.
-        startTime = time.time()
-        readDelay = float(readDelay)
-        # Initialize variable to keep track of time.
-        timePassed = 0
-
-        # Flag to keep track of whether pin has reached desired state.
-        reachedPinState = False
-
-        # While the time passed is less than the time out, keep reading the pin.
-        while timePassed <= timeout:
-
-            # If the pin reaches the desired pin state, set flag to True and break out of loop.
-            if self.read(pinName) == str(pinState):
-                reachedPinState = True
-                log.logger.debug("%s is %s. Break out of loop." % (pinName, str(pinState)))
-                break
-
-            # Update time passed.
-            timePassed = time.time() - startTime
-            log.logger.debug("Time passed while polling %s: %s seconds" % (pinName, str(timePassed)))
-
-            # Delay between reading pin.
-            time.sleep(readDelay)
-        else:
-            log.logger.warning("Polling %s timed out." % pinName)
-
-        return reachedPinState, timePassed
-
-    def getInfo(self, pinName):
+    def getInfo(self):
         '''
         This function returns all information pertaining to this GPIO.
         :return: Dictionary of information of this GPIO.
         '''
 
-        return gpioList[pinName].getInfo()
+        # If the mode is an input, read the value in case it has been changed externally.
+        if self.__mode == 'in':
+            self.gpioRead()
+
+        info =  {'BCM': self.__BCM,
+                 'mode': self.__mode,
+                 'name': self.__name,
+                 'physical': self.__physical,
+                 'value': self.__value,
+                 'wPi': self.__wPi,
+                }
+
+        log.logger.debug("Info on %s: %s" % (self.__name, info))
+
+        return info
