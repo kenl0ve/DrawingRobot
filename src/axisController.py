@@ -14,7 +14,6 @@ Description     : Initialize an individual step motor object, includes function:
 '''
 import sys
 import time
-from typing_extensions import Self
 from src.stepper                        import Stepper
 from src.limitSwitch                    import LimitSwitch
 from configuration.axisConfig           import *

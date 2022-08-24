@@ -24,7 +24,6 @@ basic_motor = StepperMotor(
 
 '''
 import time
-from typing_extensions import Self
 from src.stepperConfig          import *
 from gpio.gpioController        import GpioController
 
@@ -50,8 +49,6 @@ class Stepper():
         self._step_delay                = STEPPER_STEP_DELAY_100_MS
 
         self._is_running                = STEPPER_IS_STOP
-
-        self.save(self._motor_direction, self._step_type, self._step_delay)
 
     def pwm(self, pulses=None):
         if pulses == None: # just move, dont care the steps
