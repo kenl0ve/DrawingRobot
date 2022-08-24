@@ -24,9 +24,9 @@ basic_motor = StepperMotor(
 
 '''
 import time
+from typing_extensions import Self
 from src.stepperConfig          import *
 from gpio.gpioController        import GpioController
-from utilities.myThread         import MyThread
 
 class Stepper():
     _gpio_ctrl = GpioController.Instance()
@@ -51,41 +51,44 @@ class Stepper():
 
         self._is_running                = STEPPER_IS_STOP
 
-        # Threads
-        # self._pwmThread                 = MyThread(1, "PWM Controller", 2, self.pwm)
+        self.save(self._motor_direction, self._step_type, self._step_delay)
 
-    def pwm(self, steps):
-        for x in range(0, steps):
-            if self._is_running == STEPPER_IS_RUNNING:
+    def pwm(self, pulses=None):
+        if pulses == None: # just move, dont care the steps
+            while self._is_running == STEPPER_IS_RUNNING:
                 self.pwm_gpio   = STEPPER_GO
                 time.sleep(self._step_delay)
                 self.pwm_gpio   = STEPPER_STOP
                 time.sleep(self._step_delay)
-            
-    def motor_go(self, direction, steps):
-        '''
-        Move the motors with the step stype is full step
-        '''
-        if direction != self._motor_direction:
-            self.reverseDirection()
-
-        real_steps = steps * STEPPER_STEP_PER_REVOLUTION[self._step_type]
-
-        self.pwm(real_steps)
-
-    def move(self, direction, steps=None):
-        self._is_running    = STEPPER_IS_RUNNING
-        if steps == None: # just move, dont care the steps
-            self.pwm_gpio = STEPPER_GO
         else:
-            self.motor_go(direction, steps)
+            for x in range(0, pulses):
+                if self._is_running == STEPPER_IS_RUNNING:
+                    self.pwm_gpio   = STEPPER_GO
+                    time.sleep(self._step_delay)
+                    self.pwm_gpio   = STEPPER_STOP
+                    time.sleep(self._step_delay)
+        self.pwm_gpio   = STEPPER_STOP
+       
+    # def save(self, _motor_direction=STEPPER_CLOCKWISE_DIRECTION, _step_type=STEPPER_FULL_STEP_TYPE, _step_delay=STEPPER_STEP_DELAY_100_MS):
+    #     self.motor_direction    = _motor_direction     
+    #     self.step_type          = _step_type
+    #     self.step_delay         = _step_delay
+
+    def move(self, pulses=None):
+        self._is_running    = STEPPER_IS_RUNNING
+        self.pwm(pulses)
+
+        # if pulses == None: # just move, dont care the steps
+        #     self.pwm_gpio = STEPPER_GO
+        # else:
+        #     self.motor_go(pulses)
 
     def stop(self):
-        self._is_running == STEPPER_IS_STOP
         if self._is_running == STEPPER_IS_RUNNING:
             self.pwm_gpio = STEPPER_STOP
         else:
             raise NotImplementedError("GIVE LOG FILE")
+        self._is_running == STEPPER_IS_STOP
 
     def init(self):
         self.motor_direction    = self._motor_direction
@@ -93,12 +96,19 @@ class Stepper():
         self.step_delay         = self._step_delay
         self.stop()
 
-    def reverseDirection(self):
-        if self._motor_direction != STEPPER_CLOCKWISE_DIRECTION:
-            self.motor_direction = STEPPER_CLOCKWISE_DIRECTION
-        else:
-            self.motor_direction = STEPPER_COUNTER_CLOCKWISE_DIRECTION
+    # def reverseDirection(self):
+    #     if self._motor_direction != STEPPER_CLOCKWISE_DIRECTION:
+    #         self.motor_direction = STEPPER_CLOCKWISE_DIRECTION
+    #     else:
+    #         self.motor_direction = STEPPER_COUNTER_CLOCKWISE_DIRECTION
     
+    def setDirection(self, direction):
+        self.motor_direction = direction
+    def ccwDirection(self):
+        self.motor_direction = STEPPER_COUNTER_CLOCKWISE_DIRECTION
+    def cwDirection(self):
+        self.motor_direction = STEPPER_CLOCKWISE_DIRECTION
+
     @property
     def gpios_info(self):
         """Return the fields of this motor that contains GPIOs info. """
@@ -145,6 +155,9 @@ class Stepper():
         Return the current step type of Motor.
         """
         return self._step_type
+    @property
+    def step_revolution(self):
+        return STEPPER_STEP_PER_REVOLUTION[self.step_type]
     @step_type.setter
     def step_type(self, type):
         """Step delay setter."""

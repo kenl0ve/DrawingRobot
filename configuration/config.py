@@ -1,4 +1,5 @@
-from utilities.myLog    import MyLog
+from utilities.myLog            import MyLog
+from configuration.axisConfig   import *
 import logging
 
 LOG_DEBUG_MODE = False
@@ -26,7 +27,11 @@ X_AXIS_CONFIGURATION   =   {
     'name'              : 'X_AXIS',
     'motor'             : X_MOTOR,
     'limit_switch_home' : X_LIMIT_SWITCH_HOME,
-    'limit_switch_end'  : X_LIMIT_SWITCH_END}
+    'limit_switch_end'  : X_LIMIT_SWITCH_END,
+    'axis_length'       : AXIS_MAX_LENGTH_MM,
+    'actuator'          : 'LEADSCREW',
+    'grear_ratio'       : 2,            # n = mm/steps
+    'axis_mode_default' : AXIS_MODE_RETURN_TO_HOME}
 
 ##################### Y ##################### 
 Y_MOTOR_GPIO = [ 
