@@ -1,6 +1,6 @@
 from gpio.gpioController        import GpioController
 
-LIMIT_SWITCH_IS_PRESSED         = '1'
+LIMIT_SWITCH_IS_PRESSED         = '0'
 LIMIT_SWITCH_NONE               = None
 
 class LimitSwitch():
